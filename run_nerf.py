@@ -413,7 +413,7 @@ def render_rays(ray_batch,
 
     for k in ret:
         if (torch.isnan(ret[k]).any() or torch.isinf(ret[k]).any()) and DEBUG:
-            print(f"! [Numerical Error] {k} contains nan or inf. ")
+            print(f"! [Numerical Error] {k} contains nan or inf.")
 
     return ret
 
