@@ -828,7 +828,7 @@ def train():
         if i%args.i_print==0:
             tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
         
-            print(expname, i, psnr.cpu().numpy(), loss.cpu().numpy(), global_step.cpu().numpy())
+            print(expname, i, psnr.tensor.cpu().numpy(), loss.tensor.cpu().numpy(), global_step.tensor.cpu().numpy())
             print('iter time {:.05f}'.format(dt))
 
             with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_print):
