@@ -7,6 +7,7 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import tensorflow as tf
 from tqdm import tqdm, trange
 
 import matplotlib.pyplot as plt
@@ -827,8 +828,9 @@ def train():
     
         if i%args.i_print==0:
             tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
-        
-            print(expname, i, psnr.cpu().detach().numpy(), loss.cpu().detach().numpy(), global_step.cpu().detach().numpy())
+        """
+            #installed tensorflow by pip install --upgrade tensorflow
+            print(expname, i, psnr.cpu().detach().numpy(), loss.cpu().detach().numpy(), global_step)
             print('iter time {:.05f}'.format(dt))
 
             with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_print):
@@ -867,7 +869,7 @@ def train():
                         tf.contrib.summary.image('rgb0', to8b(extras['rgb0'])[tf.newaxis])
                         tf.contrib.summary.image('disp0', extras['disp0'][tf.newaxis,...,tf.newaxis])
                         tf.contrib.summary.image('z_std', extras['z_std'][tf.newaxis,...,tf.newaxis])
-        
+        """
 
         global_step += 1
 
