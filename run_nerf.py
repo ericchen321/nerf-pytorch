@@ -1,4 +1,6 @@
+from logging import root
 import os, sys
+from cv2 import transform
 import numpy as np
 import imageio
 import json
@@ -8,6 +10,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm, trange
+from torch.utils.tensorboard import SummaryWriter
+import torchvision
+from torchvision import datasets, transforms
 
 import matplotlib.pyplot as plt
 
@@ -705,8 +710,24 @@ def train():
     print('VAL views are', i_val)
 
     # Summary writers
-    # writer = SummaryWriter(os.path.join(basedir, 'summaries', expname))
+    writer = SummaryWriter(os.path.join(basedir, expname, 'summaries'))
     
+
+    
+    """
+    trainloader = torch.utils.data.DataLoader(loss, batch_size=64, shuffle=True)
+    images, labels = next(iter(trainloader))
+
+    grid = torchvision.utils.make_grid(images)
+    writer.add_image('images', grid, 0)
+    
+    #grid = torchvision.utils.make_grid(loss)
+    #writer.add_image('image', grid, 0)
+
+    writer.add_image('Loss Info', loss, 0)
+    writer.add_image('PSNR Info', torchvision.utils.make_grid(psnr), 0, dataformats='CHW')
+    """
+
     start = start + 1
     for i in trange(start, N_iters):
         time0 = time.time()
@@ -824,20 +845,26 @@ def train():
             print('Saved test set')
 
 
+        #tensorboard data display
+        writer.add_scalar('Loss', loss.item(), global_step)
+        writer.add_scalar('PSNR', psnr.item(), global_step)
     
         if i%args.i_print==0:
             tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
-        
+
+            """
             print(expname, i, psnr.cpu().detach().numpy(), loss.cpu().detach().numpy(), global_step.cpu().detach().numpy())
             print('iter time {:.05f}'.format(dt))
+            """
 
+            """
             with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_print):
                 tf.contrib.summary.scalar('loss', loss)
                 tf.contrib.summary.scalar('psnr', psnr)
                 tf.contrib.summary.histogram('tran', trans)
                 if args.N_importance > 0:
                     tf.contrib.summary.scalar('psnr0', psnr0)
-
+            """
 
             if i%args.i_img==0:
 
@@ -846,11 +873,15 @@ def train():
                 target = images[img_i]
                 pose = poses[img_i, :3,:4]
                 with torch.no_grad():
-                    rgb, disp, acc, extras = render(H, W, focal, chunk=args.chunk, c2w=pose,
+                    rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, c2w=pose,
                                                         **render_kwargs_test)
 
-                psnr = mse2psnr(img2mse(rgb, target))
+                # print(f"type of rgb: {type(rgb)}")
+                # print(f"type of target: {type(target)}")
 
+                psnr = mse2psnr(img2mse(rgb, torch.tensor(target)))
+
+                """
                 with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_img):
 
                     tf.contrib.summary.image('rgb', to8b(rgb)[tf.newaxis])
@@ -863,13 +894,30 @@ def train():
 
                 if args.N_importance > 0:
 
-                    with tf.contrib.summary.record_summaries_every_n_global_steps(args.i_img):
+                    with tf.contrib.summary.rec ord_summaries_every_n_global_steps(args.i_img):
                         tf.contrib.summary.image('rgb0', to8b(extras['rgb0'])[tf.newaxis])
                         tf.contrib.summary.image('disp0', extras['disp0'][tf.newaxis,...,tf.newaxis])
                         tf.contrib.summary.image('z_std', extras['z_std'][tf.newaxis,...,tf.newaxis])
-        
+                """
+
+                """
+                print(f'rgb={to8b(rgb.cpu().detach().numpy()).shape}')
+                print(f'disp={disp.shape}')
+                print(f'acc={acc.shape}')
+                print(f'psnr_holdout={psnr.shape}')
+                print(f'rgb_holdout={target.shape}')
+
+                """
+
+                writer.add_image('rgb', to8b(rgb.cpu().detach().numpy()), global_step, dataformats='HWC')
+                writer.add_image('disp', disp, global_step, dataformats='HW')
+                writer.add_image('acc', acc, global_step, dataformats='HW')
+                writer.add_scalar('psnr_holdout', psnr, global_step)
+                writer.add_image('rgb_holdout', target, global_step, dataformats='HWC')
 
         global_step += 1
+    
+    writer.close()
 
 
 if __name__=='__main__':
