@@ -1,10 +1,10 @@
-# This replicates the paper result for "Lego"
+# This replicates the paper result for "ficus"
 # when trained to 500k iters. Settings are the 
 # same for all other synthetic blender scenes.
 
-expname = blender_paper_lego
+expname = blender_paper_ficus
 basedir = ./logs
-datadir = ./data/nerf_synthetic/lego
+datadir = ./data/nerf_synthetic/ficus
 dataset_type = blender
 
 no_batching = True
