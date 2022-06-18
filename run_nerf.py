@@ -662,6 +662,8 @@ def train():
             if args.render_test:
                 # render_test switches to test poses
                 images = images[i_test]
+                # print(f'images is of type{type(images)}')
+                # print(f'images is of shape{(images.shape)}')
             else:
                 # Default is smoother render_poses path
                 images = None
@@ -671,6 +673,13 @@ def train():
             print('test poses shape', render_poses.shape)
 
             rgbs, _ = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test, gt_imgs=images, savedir=testsavedir, render_factor=args.render_factor)
+            
+            
+            psnr = mse2psnr(img2mse(torch.tensor(images), torch.tensor(rgbs)))
+            print(f'PSNR: {psnr}')
+            # print(f'rgbs is of type{type(rgbs)}.')
+            # print(f'rgbs is of shape{(rgbs.shape)}')
+            
             print('Done rendering', testsavedir)
             imageio.mimwrite(os.path.join(testsavedir, 'video.mp4'), to8b(rgbs), fps=30, quality=8)
 
